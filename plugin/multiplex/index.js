@@ -11,17 +11,19 @@ var server    	= http.createServer(app);
 io = io(server);
 
 var opts = {
-	port: process.env.PORT || 1948,
+	port: process.env.PORT || 8948,
 	baseDir : __dirname + '/../../'
 };
 
 io.on( 'connection', function( socket ) {
+	console.log("connected +1")
 	socket.on('multiplex-statechanged', function(data) {
 		if (typeof data.secret == 'undefined' || data.secret == null || data.secret === '') return;
-		if (createHash(data.secret) === data.socketId) {
+		//console.log(data)
+		//if (createHash(data.secret) === data.socketId) {
 			data.secret = null;
-			socket.broadcast.emit(data.socketId, data);
-		};
+			socket.broadcast.emit('action', data);
+		//}
 	});
 });
 
@@ -29,12 +31,38 @@ io.on( 'connection', function( socket ) {
 	app.use('/' + dir, staticDir(opts.baseDir + dir));
 });
 
-app.get("/", function(req, res) {
-	res.writeHead(200, {'Content-Type': 'text/html'});
+function listDir(dir, result){
+	if(result===undefined){
+		result = []
+	}
+	var fileList = fs.readdirSync(dir,'utf-8');
+	for(var i=0;i<fileList.length;i++) {
+		var stat = fs.lstatSync(dir + fileList[i]);
+		// 是目录，需要继续
+		if (stat.isDirectory() && fileList[i].startsWith('ppt')) {
+			listDir(dir + fileList[i]  + '/', result);
+		} else if(fileList[i].endsWith('.html')){
+			result.push(dir + fileList[i]);
+		}
+	}
+	return result
+}
 
-	var stream = fs.createReadStream(opts.baseDir + '/index.html');
+function files2html(fileList, baseDir){
+	var time = new Date().getTime()
+	return '<ul>' + fileList.map(function(i){
+		var relPath = i.substr(baseDir.length)
+		return '<li><a href="/'+relPath+'?show='+time+'" target="_blank">'+relPath+'</a></li>'
+	}).join('\n') + '</ul>'
+}
+
+app.get("/*.html", function(req, res) {
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	var path = decodeURI(req.path)
+	console.log(path)
+	var stream = fs.createReadStream(opts.baseDir + path);
 	stream.on('error', function( error ) {
-		res.write('<style>body{font-family: sans-serif;}</style><h2>reveal.js multiplex server.</h2><a href="/token">Generate token</a>');
+		res.write('can not read file ['+req.path+'], check name again.');
 		res.end();
 	});
 	stream.on('readable', function() {
@@ -42,11 +70,27 @@ app.get("/", function(req, res) {
 	});
 });
 
+app.get("/", function(req, res) {
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	//var stream = fs.createReadStream(opts.baseDir + '/index.html');
+	//stream.on('error', function( error ) {
+		var hostName = req.hostname+(opts.port==80?'':(':'+opts.port))
+		var htmlFiles = listDir(opts.baseDir)
+		res.write(files2html(htmlFiles, opts.baseDir, hostName));
+		res.end();
+	//});
+	//stream.on('readable', function() {
+	//	stream.pipe(res);
+	//});
+});
+
 app.get("/token", function(req,res) {
-	var ts = new Date().getTime();
-	var rand = Math.floor(Math.random()*9999999);
-	var secret = ts.toString() + rand.toString();
-	res.send({secret: secret, socketId: createHash(secret)});
+	var id = req.query.t
+	if(id){
+		res.send({secret: createHash(id)});
+	}else{
+		res.send({error:'need param t.'})
+	}
 });
 
 var createHash = function(secret) {
