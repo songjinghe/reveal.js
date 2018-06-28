@@ -12,7 +12,8 @@
 		var messageData = {
 			state: Reveal.getState(),
 			secret: multiplex.secret,
-			socketId: multiplex.id
+			socketId: multiplex.id,
+			path: window.location.pathname
 		};
 
 		socket.emit( 'multiplex-statechanged', messageData );

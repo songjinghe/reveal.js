@@ -10,8 +10,10 @@ var server    	= http.createServer(app);
 
 io = io(server);
 
+var argv = require('minimist')(process.argv.slice(2))
+
 var opts = {
-	port: process.env.PORT || 8948,
+	port: argv.port || 8948,
 	baseDir : __dirname + '/../../'
 };
 
@@ -101,8 +103,9 @@ var createHash = function(secret) {
 // Actually listen
 server.listen( opts.port || null );
 
-var brown = '\033[33m',
-	green = '\033[32m',
-	reset = '\033[0m';
+// var brown = '\033[33m',
+// 	green = '\033[32m',
+// 	reset = '\033[0m';
 
-console.log( brown + "reveal.js:" + reset + " Multiplex running on port " + green + opts.port + reset );
+// console.log( brown + "reveal.js:" + reset + " Multiplex running on port " + green + opts.port + reset );
+console.log( "Reveal.js: Multiplex running on port " + opts.port );

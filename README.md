@@ -1,3 +1,14 @@
+# reveal.js Easy Control
+对multiplex的插件进行了一些修改，现在的话如果要做多人展示，首先要在服务器上启动转发server：
+```
+npm install
+node plugin/multiplex
+```
+然后默认的监听端口是8948（可以用`--port 8888`指定其他的端口），然后在多台电脑的浏览器上打开这个网址，比如 http://localhost:8948 ，这里会列出项目根目录下及根目录`ppt`文件夹下的所有html文件，点击其中一个即可以打开播放幻灯片。当然这个时候大家打开都是没法全局控制的，都只能控制自己的。如果你想把自己的操作同步给所有人的话，需要手动在打开的ppt的url参数后面加上`admin=1`就可以控制其他人的PPT了。
+
+控制的时间范围默认为4个小时，即4小时之内所有打开的相同文件的ppt都会被你控制。（PS管理员无需首先打开）
+
+
 # reveal.js [![Build Status](https://travis-ci.org/hakimel/reveal.js.svg?branch=master)](https://travis-ci.org/hakimel/reveal.js) <a href="https://slides.com?ref=github"><img src="https://s3.amazonaws.com/static.slid.es/images/slides-github-banner-320x40.png?1" alt="Slides" width="160" height="20"></a>
 
 A framework for easily creating beautiful presentations using HTML. [Check out the live demo](http://revealjs.com/).
